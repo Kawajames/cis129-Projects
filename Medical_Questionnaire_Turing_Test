@@ -1,0 +1,18 @@
+# Medical Questionnaire Turing Test
+
+# Ask the user to specify what their problem is
+input('What is your problem? ')
+
+# Ask the user if they have had this problem before, repeat if no answer is given
+while True:
+    answer = input('Have you had this problem before (yes or no)? ')
+    
+    # Output based on answer
+    if answer == 'yes':
+        print('Well, you have it again.')
+        break # terminate the program if a correct answer is given
+    elif answer == 'no':
+        print('Well, you have it now.')
+        break # terminate the program if a correct answer is given
+    else:
+        print('Please answer with "yes" or "no".') # Ask the question again
