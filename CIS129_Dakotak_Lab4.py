@@ -1,6 +1,6 @@
-#CIS129_DakotaKartchner_Lab4.py
+#CIS129_Dakota_Lab4.py
 #CIS129 - Module 4 lab+
-#Dakota Kartchner
+#Dakota
 #Created 9/24/2024
 #Description - This program calculates120500 the bonus amounts for the store and employees based on profit amount
 
