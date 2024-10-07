@@ -1,5 +1,5 @@
 # cis129_lab03_coffeeShop.py
-# Created by Dakota Kartchner for CIS129 Prog and Problem Solving
+# Created by Dakota  for CIS129 Prog and Problem Solving
 
 coffee_price = 5    # $5 for each coffee
 muffin_price = 4    # $4 for each muffin
