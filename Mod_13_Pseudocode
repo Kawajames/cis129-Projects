@@ -1,0 +1,152 @@
+BEGIN
+
+    // Step 1: Input Item Identifiers (MPN, ASIN, SKU) manually through program/XML file
+    DEFINE identifiers = { "MPN": "ABC123", "ASIN": "B07CVNS6PW", "SKU": "XYZ456" }
+
+    // Step 2: Scrape prices from various websites
+    DEFINE function SCRAPE_PRICES(identifiers)
+        DEFINE urls = [
+            "https://www.amazon.com/dp/{ASIN}",
+            "https://www.ebay.com/sch/i.html?_nkw={MPN}"
+            // Add more URLs if needed
+        ]
+        DEFINE prices = []
+
+        FOR each url IN urls
+            TRY
+                GET webpage content from url
+                IF the request is successful
+                    EXTRACT price from webpage
+                    ADD extracted price to prices list
+                ELSE
+                    CONTINUE to the next url
+            EXCEPT error
+                PRINT "Error fetching {url}"
+            END TRY
+        END FOR
+
+        RETURN prices
+    END FUNCTION
+
+    // Step 3: Calculate the average price, filtering outliers
+    DEFINE function CALCULATE_AVERAGE_PRICE(prices)
+        IF prices list is empty
+            RETURN 0
+
+        SORT prices list
+        DEFINE lower_bound, upper_bound
+        CALCULATE lower and upper bounds using IQR (Interquartile Range)
+        FILTER out any prices outside the bounds
+
+        IF there are valid prices left
+            RETURN the mean of the filtered prices
+        ELSE
+            RETURN 0
+        END IF
+    END FUNCTION
+
+    // Step 4: Calculate the final cost including fees
+    DEFINE function CALCULATE_FINAL_COST(item_cost, fee_percent)
+        RETURN item_cost * (1 + fee_percent)
+    END FUNCTION
+
+    // Step 5: Calculate the maximum bid based on desired profit margin
+    DEFINE function CALCULATE_MAX_BID(final_cost, desired_margin_percent)
+        RETURN final_cost / (1 + desired_margin_percent / 100)
+    END FUNCTION
+
+    // Step 6: Monitor the auction price and decide when to stop
+
+BEGIN
+
+    // Step 1: Input Item Identifiers (MPN, ASIN, SKU) manually
+    DEFINE identifiers = { "MPN": "ABC123", "ASIN": "B07CVNS6PW", "SKU": "XYZ456" }
+
+    // Step 2: Scrape prices from various websites
+    DEFINE function SCRAPE_PRICES(identifiers)
+        DEFINE urls = [
+            "https://www.amazon.com/dp/{ASIN}",
+            "https://www.ebay.com/sch/i.html?_nkw={MPN}"
+            // Add more URLs if needed
+        ]
+        DEFINE prices = []
+
+        FOR each url IN urls
+            TRY
+                GET webpage content from url
+                IF the request is successful
+                    EXTRACT price from webpage
+                    ADD extracted price to prices list
+                ELSE
+                    CONTINUE to the next url
+            EXCEPT error
+                PRINT "Error fetching {url}"
+            END TRY
+        END FOR
+
+        RETURN prices
+    END FUNCTION
+
+    // Step 3: Calculate the average price, filtering outliers
+    DEFINE function CALCULATE_AVERAGE_PRICE(prices)
+        IF prices list is empty
+            RETURN 0
+
+        SORT prices list
+        DEFINE lower_bound, upper_bound
+        CALCULATE lower and upper bounds using IQR (Interquartile Range)
+        FILTER out any prices outside the bounds
+
+        IF there are valid prices left
+            RETURN the mean of the filtered prices
+        ELSE
+            RETURN 0
+        END IF
+    END FUNCTION
+
+    // Step 4: Calculate the final cost including fees
+    DEFINE function CALCULATE_FINAL_COST(item_cost, fee_percent)
+        RETURN item_cost * (1 + fee_percent)
+    END FUNCTION
+
+    // Step 5: Calculate the maximum bid based on desired profit margin
+    DEFINE function CALCULATE_MAX_BID(final_cost, desired_margin_percent)
+        RETURN final_cost / (1 + desired_margin_percent / 100)
+    END FUNCTION
+
+    // Step 6: Monitor the auction price and decide when to stop bidding
+    DEFINE function MONITOR_AUCTION_PRICE(auction_url, max_bid)
+        REPEAT
+            GET auction webpage content
+            IF the request is successful
+                EXTRACT the current bid from webpage
+                IF the current bid >= max_bid
+                    PRINT "Max bid reached: {current_bid}. Stop bidding!"
+                    BREAK
+                ELSE
+                    PRINT "Current bid: {current_bid}. Continue bidding."
+                END IF
+            END IF
+            WAIT for 30 seconds before checking again
+        UNTIL the bidding price exceeds max_bid
+    END FUNCTION
+
+    // Main Flow
+    prices = SCRAPE_PRICES(identifiers)
+    PRINT "Prices found: {prices}"
+
+    average_price = CALCULATE_AVERAGE_PRICE(prices)
+    PRINT "Average price: {average_price}"
+
+    fee_percent = 0.05  // Auction fee (5%)
+    final_cost = CALCULATE_FINAL_COST(average_price, fee_percent)
+    PRINT "Final cost after fees: {final_cost}"
+
+    desired_margin_percent = 20  // Desired profit margin (20%)
+    max_bid = CALCULATE_MAX_BID(final_cost, desired_margin_percent)
+    PRINT "Max bid: {max_bid}"
+
+    auction_url = "FILL IN HERE"  // Example auction URL
+    MONITOR_AUCTION_PRICE(auction_url, max_bid)
+
+END
