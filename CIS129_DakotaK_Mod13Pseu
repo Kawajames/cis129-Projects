@@ -1,3 +1,9 @@
+# CIS129_DakotaK_Mod13.py 
+# Dakota K
+# CIS129 Prog & Problem Solv I
+# Auction Bid Optimization Tool
+# Finds the correct bidding price on items found on bidding website
+
 BEGIN
 
     // Step 1: Input Item Identifiers (MPN, ASIN, SKU) manually through program/XML file
