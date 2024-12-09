@@ -1,0 +1,141 @@
+# CIS129_DakotaK_Mod13.py 
+# Dakota K
+# CIS129 Prog & Problem Solv I
+# Auction Bid Optimization Tool
+# Finds the correct bidding price on items found on bidding website
+
+import requests
+from bs4 import BeautifulSoup
+import pandas as pd
+import time
+import numpy as np
+
+# Function to scrape prices from multiple websites
+def scrape_prices(identifier):
+    # Define websites to scrape (Amazon, eBay, etc.)
+    urls = [
+        f'https://www.amazon.com/dp/{identifier["ASIN"]}',
+        f'https://www.ebay.com/sch/i.html?_nkw={identifier["MPN"]}'
+        # Add more URLs here as needed
+    ]
+
+    prices = []
+    for url in urls:
+        try:
+            response = requests.get(url)
+            if response.status_code == 200:
+                soup = BeautifulSoup(response.text, 'html.parser')
+                price = extract_price(soup, url)
+                if price:
+                    prices.append(price)
+        except requests.RequestException as e:
+            print(f"Error fetching {url}: {e}")
+
+    return prices
+
+# Function to extract price from a page
+def extract_price(soup, url):
+    if 'amazon' in url:
+        # Amazon price extraction logic (This may vary depending on Amazon's HTML structure)
+        price_tag = soup.find('span', {'id': 'priceblock_ourprice'})
+        if price_tag:
+            price = float(price_tag.text.replace('$', '').replace(',', ''))
+            return price
+    elif 'ebay' in url:
+        # eBay price extraction logic (This may vary depending on eBay's HTML structure)
+        price_tag = soup.find('span', {'class': 'x-price-primary'})
+        if price_tag:
+            price = float(price_tag.text.replace('$', '').replace(',', ''))
+            return price
+    return None
+
+# Function to calculate average price, excluding outliers
+def calculate_average_price(prices):
+    if len(prices) < 2:
+        return np.mean(prices) if prices else 0
+
+    # Convert to numpy array for easier manipulation
+    prices_array = np.array(prices)
+    # Calculate Q1 and Q3 for outlier filtering
+    Q1 = np.percentile(prices_array, 25)
+    Q3 = np.percentile(prices_array, 75)
+    IQR = Q3 - Q1
+    # Define outlier bounds (1.5*IQR rule)
+    lower_bound = Q1 - 1.5 * IQR
+    upper_bound = Q3 + 1.5 * IQR
+
+    # Filter out outliers
+    filtered_prices = prices_array[(prices_array >= lower_bound) & (prices_array <= upper_bound)]
+    
+    # Return the average of the filtered prices
+    return np.mean(filtered_prices) if filtered_prices.size > 0 else 0
+
+# Function to calculate final cost including fees
+def calculate_final_cost(item_cost, fee_percent):
+    return item_cost * (1 + fee_percent)
+
+# Function to calculate max bid based on desired profit margin
+def calculate_max_bid(final_cost, desired_margin_percent):
+    max_bid = final_cost / (1 + desired_margin_percent / 100)
+    return max_bid
+
+# Function to monitor auction site price and decide whether to stop bidding
+def monitor_auction_price(auction_url, max_bid):
+    while True:
+        try:
+            response = requests.get(auction_url)
+            if response.status_code == 200:
+                soup = BeautifulSoup(response.text, 'html.parser')
+                current_bid = extract_current_bid(soup)
+                if current_bid >= max_bid:
+                    print(f"Max bid reached: {current_bid}. Stop bidding!")
+                    break
+                else:
+                    print(f"Current bid: {current_bid}. Continue bidding.")
+            time.sleep(30)  # Check the price every 30 seconds (adjust as needed)
+        except requests.RequestException as e:
+            print(f"Error monitoring auction: {e}")
+            break
+
+# Function to extract current bid from the auction page
+def extract_current_bid(soup):
+    # You need to implement logic based on the auction website's HTML
+    # For example, if you're scraping eBay:
+    bid_tag = soup.find('span', {'class': 'x-current-price'})
+    if bid_tag:
+        return float(bid_tag.text.replace('$', '').replace(',', ''))
+    return 0
+
+# Main function to execute the entire process
+def main():
+    # Step 1: Get the item's identifiers manually (MPN, ASIN, SKU)
+    identifier = {
+        "MPN": "ABC123",
+        "ASIN": "B07CVNS6PW",
+        "SKU": "XYZ456"
+    }
+
+    # Step 2: Scrape prices from websites
+    prices = scrape_prices(identifier)
+    print(f"Prices found: {prices}")
+
+    # Step 3: Calculate average price
+    average_price = calculate_average_price(prices)
+    print(f"Average price: {average_price}")
+
+    # Step 4: Calculate final cost including fees (5% auction fee)
+    fee_percent = 0.05
+    final_cost = calculate_final_cost(average_price, fee_percent)
+    print(f"Final cost after fees: {final_cost}")
+
+    # Step 5: Calculate max bid based on desired profit margin (e.g., 20%)
+    desired_margin_percent = 20
+    max_bid = calculate_max_bid(final_cost, desired_margin_percent)
+    print(f"Max bid: {max_bid}")
+
+    # Step 6: Monitor the auction and stop bidding if max bid is reached
+    auction_url = 'https://www.ebay.com/itm/1234567890'  # Example auction URL
+    monitor_auction_price(auction_url, max_bid)
+
+if __name__ == "__main__":
+    main()
